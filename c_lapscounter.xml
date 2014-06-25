@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<settings>
+
+	<widget_frame>
+		<posn>
+			<x>112</x>
+			<y>-5.5</y>
+			<z>20</z>
+		</posn>
+		<scale>1.5</scale>
+	</widget_frame>
+	<gameMode>4</gameMode><!--gameMode 4 = Laps-->
+</settings>
