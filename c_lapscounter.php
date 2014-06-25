@@ -1,5 +1,12 @@
 <?php
- 
+/*****************************************************************************************
+plugin c_lapscounter.php
+shows a custom lapscounter adjustable in size and position
+
+@author doe-eye alias d4u alias aca78
+
+
+******************************************************************************************/ 
 Aseco::registerEvent('onStartup', 'clc_startup');
 
 Aseco::registerEvent('onPlayerConnect', 'clc_playerConnect');
