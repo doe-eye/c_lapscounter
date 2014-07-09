@@ -1,2 +1,8 @@
-- when spectating don't show the counter or show the counter of spectated
+
 - make it possible to set more than one game-mode, in which counter should be shown
+
+
+
+
+DONE since v.2
+- when spectating don't show the counter or show the counter of spectated 
