@@ -3,7 +3,7 @@
 plugin.c_lapscounter.php
 shows a custom lapscounter adjustable in size and position
 
-@version v2.0a
+@version v2.1a
 @author aca
 
 
@@ -20,11 +20,12 @@ Aseco::registerEvent('onBeginRound', 'clc_beginRound');
 
 Aseco::registerEvent('onCheckpoint', 'clc_checkpoint');
 
+Aseco::registerEvent('onEverySecond','clc_onEverySecond');
 
-global $clc, $clc_specArray;//$clc_specArray['spectatorLogin'] = spectatedLogin
+global $clc;
 
 function clc_playerInfoChanged($aseco, $changes){
-	global $clc, $clc_specArray;
+	global $clc;
 	if($aseco->server->gameinfo->mode == $clc->gameMode){
 		$login = $changes['Login'];
 		$spectatorStatus = $changes['SpectatorStatus'];
@@ -49,16 +50,19 @@ function clc_playerInfoChanged($aseco, $changes){
 						break;
 					}
 				}			
-				$clc_specArray[$spectatorLogin] = $spectatedLogin;
+				$clc->specArray[$spectatorLogin] = $spectatedLogin;
+				
+				//show instantly clapscounter of spectated
+				$clc->showCustomLapCounter($aseco, true, $spectatorLogin, $clc->cpArray[$spectatedLogin]);
 			}
 			else{//is free-spec
-				$clc_specArray[$spectatorLogin] = null;
+				$clc->specArray[$spectatorLogin] = null;
 			}
 		}
 		//if status changed from spectator to player
-		elseif ($clc_specArray[$login] != null){
-			$clc_specArray[$login] = null;
-		}
+		//elseif ($clc->specArray[$login] != null){
+		//	$clc->specArray[$login] = null;
+		//}
 	}
 
 	
@@ -73,9 +77,11 @@ function clc_beginRound($aseco){
 }
 
 function clc_startup($aseco){
-	global $clc, $clc_specArray;
-	$clc_specArray = array();
+	global $clc;
 	$clc = new ClapsCounter();
+	$clc->specArray = array();
+	$clc->cpArray = array();
+	
 	$clc->settings = simplexml_load_file('c_lapscounter.xml');
 	$clc->lap = 1;
 	$clc->gameMode = $clc->settings->gameMode;
@@ -85,6 +91,7 @@ function clc_startup($aseco){
 function clc_playerConnect($aseco, $player){
 	global $clc;
 	if($aseco->server->gameinfo->mode == $clc->gameMode){
+		$clc->cpArray[$player->login] = -1;
 		$clc->showCustomLapCounter($aseco, true, $player->login);
 	}
 }
@@ -115,15 +122,16 @@ function clc_beginMap($aseco, $map){
 }
 
 function clc_checkpoint($aseco, $cmd){
-	global $clc, $clc_specArray;
+	global $clc;
 	if($aseco->server->gameinfo->mode == $clc->gameMode){
 		$login = $cmd[1];
 		$cp = $cmd[4];
+		$clc->cpArray[$login] = $cp+1;
+		
 		$clc->showCustomLapCounter($aseco, true, $login, $cp);
 		
 		//also show to spectators
-		foreach ($clc_specArray as $spectator => $spectated){
-			$aseco->console("spec: ".$spectator." spectated: ".$spectated);
+		foreach ($clc->specArray as $spectator => $spectated){
 			if($spectated == $login){
 				$clc->showCustomLapCounter($aseco, true, $spectator, $cp);
 			}
@@ -134,12 +142,14 @@ function clc_checkpoint($aseco, $cmd){
 
 
 class ClapsCounter{
+	public $specArray;//['spectatorLogin'] = spectatedLogin
+	public $cpArray;//['login'] = latestcp
 	public $settings;
 	public $numCps;
 	public $numLaps;
 	public $lap;
-	public $gameMode;
-
+	public $gameMode;	
+	
 	function showCustomLapCounter($aseco, $show, $login=null, $cp=-2){
 		if($show){
 			$xml  = '<?xml version="1.0" encoding="UTF-8"?>';
@@ -168,7 +178,7 @@ class ClapsCounter{
 			$xml .= '</manialink>';
 
 			
-			
+			//quad covering the original lapscounter
 			$xml2 = '<?xml version="1.0" encoding="UTF-8"?>';
 			$xml2 .= '<manialink id="23017811" version="1">';
 			$xml2 .= '<frame posn="152 50 -20">';
@@ -181,7 +191,8 @@ class ClapsCounter{
 			$xml = '<manialink id="23017810" version="1"></manialink>';
 			$xml2 = '<manialink id="23017811" version="1"></manialink>';
 		}
-		
+
+
 		if($login){
 			$aseco->client->query('SendDisplayManialinkPageToLogin', $login, $xml, 0, false);
 			$aseco->client->query('SendDisplayManialinkPageToLogin', $login, $xml2, 0, false);
