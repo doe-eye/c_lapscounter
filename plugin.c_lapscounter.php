@@ -11,16 +11,14 @@ shows a custom lapscounter adjustable in size and position
 Aseco::registerEvent('onStartup', 'clc_startup');
 
 Aseco::registerEvent('onPlayerConnect', 'clc_playerConnect');
+Aseco::registerEvent('onPlayerDisconnect', 'clc_playerDisconnect');
 Aseco::registerEvent('onPlayerInfoChanged', 'clc_playerInfoChanged');
 
 Aseco::registerEvent('onEndMap', 'clc_endMap');
 Aseco::registerEvent('onBeginMap', 'clc_beginMap');
 
-Aseco::registerEvent('onBeginRound', 'clc_beginRound');
-
 Aseco::registerEvent('onCheckpoint', 'clc_checkpoint');
 
-Aseco::registerEvent('onEverySecond','clc_onEverySecond');
 
 global $clc;
 
@@ -60,20 +58,12 @@ function clc_playerInfoChanged($aseco, $changes){
 			}
 		}
 		//if status changed from spectator to player
-		//elseif ($clc->specArray[$login] != null){
-		//	$clc->specArray[$login] = null;
-		//}
+		elseif ($clc->specArray[$login] != null){
+			$clc->specArray[$login] = null;
+		}
 	}
 
 	
-}
-
-function clc_beginRound($aseco){
-	global $clc;
-	if($aseco->server->gameinfo->mode == $clc->gameMode){
-		$clc->lap = 1;
-		$clc->showCustomLapCounter($aseco, true);
-	}
 }
 
 function clc_startup($aseco){
@@ -93,6 +83,14 @@ function clc_playerConnect($aseco, $player){
 	if($aseco->server->gameinfo->mode == $clc->gameMode){
 		$clc->cpArray[$player->login] = -1;
 		$clc->showCustomLapCounter($aseco, true, $player->login);
+	}
+}
+
+function clc_playerDisconnect($aseco, $player){
+	global $clc;
+	if($aseco->server->gameinfo->mode == $clc->gameMode){
+		$clc->cpArray[$player->login] = null;
+		$clc->specArray[$player->login] = null;
 	}
 }
 
@@ -116,6 +114,13 @@ function clc_beginMap($aseco, $map){
 			$clc->numLaps =1;
 			
 		}
+		$clc->lap = 1;
+		
+		//reset cps in cpArray
+		foreach($clc->cpArray as $key => $cp){
+			$clc->cpArray[$key] = -2;
+		}
+		
 		
 		$clc->showCustomLapCounter($aseco, true);
 	}
