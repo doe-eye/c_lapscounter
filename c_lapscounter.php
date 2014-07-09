@@ -3,7 +3,8 @@
 plugin c_lapscounter.php
 shows a custom lapscounter adjustable in size and position
 
-@author doe-eye alias d4u alias aca78
+@version v1.1
+@author aca
 
 
 ******************************************************************************************/ 
@@ -90,7 +91,7 @@ class ClapsCounter{
 	function showCustomLapCounter($aseco, $show, $login=null, $cp=-2){
 		if($show){
 			$xml  = '<?xml version="1.0" encoding="UTF-8"?>';
-			$xml .= '<manialink id="0" version="1">';
+			$xml .= '<manialink id="23017810" version="1">';
 			
 			//widget_frame
 			$xml .= '<frame posn="'.$this->settings->widget_frame->posn->x.' '.$this->settings->widget_frame->posn->y.' '.$this->settings->widget_frame->posn->z.'" ';
@@ -117,7 +118,7 @@ class ClapsCounter{
 			
 			
 			$xml2 = '<?xml version="1.0" encoding="UTF-8"?>';
-			$xml2 .= '<manialink id="1" version="1">';
+			$xml2 .= '<manialink id="23017811" version="1">';
 			$xml2 .= '<frame posn="152 50 -20">';
 			$xml2 .= '<quad sizen="13 12" bgcolor="444F" halign="center" valign="center"/>';
 			$xml2 .= '</frame>';
@@ -125,8 +126,8 @@ class ClapsCounter{
 			
 		}
 		else{
-			$xml = '<manialink id="0" version="1"></manialink>';
-			$xml2 = '<manialink id="1" version="1"></manialink>';
+			$xml = '<manialink id="23017810" version="1"></manialink>';
+			$xml2 = '<manialink id="23017811" version="1"></manialink>';
 		}
 		
 		if($login){
