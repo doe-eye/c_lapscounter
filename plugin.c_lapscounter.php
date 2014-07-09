@@ -1,9 +1,9 @@
 <?php
 /*****************************************************************************************
-plugin c_lapscounter.php
+plugin.c_lapscounter.php
 shows a custom lapscounter adjustable in size and position
 
-@version v1.1
+@version v2.0a
 @author aca
 
 
@@ -11,6 +11,8 @@ shows a custom lapscounter adjustable in size and position
 Aseco::registerEvent('onStartup', 'clc_startup');
 
 Aseco::registerEvent('onPlayerConnect', 'clc_playerConnect');
+Aseco::registerEvent('onPlayerInfoChanged', 'clc_playerInfoChanged');
+
 Aseco::registerEvent('onEndMap', 'clc_endMap');
 Aseco::registerEvent('onBeginMap', 'clc_beginMap');
 
@@ -19,7 +21,48 @@ Aseco::registerEvent('onBeginRound', 'clc_beginRound');
 Aseco::registerEvent('onCheckpoint', 'clc_checkpoint');
 
 
-global $clc;
+global $clc, $clc_specArray;//$clc_specArray['spectatorLogin'] = spectatedLogin
+
+function clc_playerInfoChanged($aseco, $changes){
+	global $clc, $clc_specArray;
+	if($aseco->server->gameinfo->mode == $clc->gameMode){
+		$login = $changes['Login'];
+		$spectatorStatus = $changes['SpectatorStatus'];
+		$isSpec = $spectatorStatus % 10000;
+		
+		//if status changed to spectator
+		if($isSpec){
+			$spectatorLogin = $changes['Login'];
+			$spectatorID = $changes['PlayerId'];
+			$spectatedID = (int) ($spectatorStatus / 10000);
+			
+			//is a player spectated
+			if($spectatedID > 0 && $spectatedID < 255){
+				//fetch login of spectatedID
+				$aseco->client->query('GetPlayerList',254,0);//max number of infos, starting-index
+				$playerList = $aseco->client->getResponse();
+				$spectatedLogin = '';
+				foreach($playerList as $player){
+					$pID = $player['PlayerId'];
+					if($pID == $spectatedID){
+						$spectatedLogin = $player['Login'];
+						break;
+					}
+				}			
+				$clc_specArray[$spectatorLogin] = $spectatedLogin;
+			}
+			else{//is free-spec
+				$clc_specArray[$spectatorLogin] = null;
+			}
+		}
+		//if status changed from spectator to player
+		elseif ($clc_specArray[$login] != null){
+			$clc_specArray[$login] = null;
+		}
+	}
+
+	
+}
 
 function clc_beginRound($aseco){
 	global $clc;
@@ -30,7 +73,8 @@ function clc_beginRound($aseco){
 }
 
 function clc_startup($aseco){
-	global $clc;
+	global $clc, $clc_specArray;
+	$clc_specArray = array();
 	$clc = new ClapsCounter();
 	$clc->settings = simplexml_load_file('c_lapscounter.xml');
 	$clc->lap = 1;
@@ -71,11 +115,19 @@ function clc_beginMap($aseco, $map){
 }
 
 function clc_checkpoint($aseco, $cmd){
-	global $clc;
+	global $clc, $clc_specArray;
 	if($aseco->server->gameinfo->mode == $clc->gameMode){
 		$login = $cmd[1];
 		$cp = $cmd[4];
 		$clc->showCustomLapCounter($aseco, true, $login, $cp);
+		
+		//also show to spectators
+		foreach ($clc_specArray as $spectator => $spectated){
+			$aseco->console("spec: ".$spectator." spectated: ".$spectated);
+			if($spectated == $login){
+				$clc->showCustomLapCounter($aseco, true, $spectator, $cp);
+			}
+		}
 	}
 }
 
