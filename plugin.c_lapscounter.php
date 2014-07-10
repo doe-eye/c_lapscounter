@@ -3,7 +3,7 @@
 plugin.c_lapscounter.php
 shows a custom lapscounter adjustable in size and position
 
-@version v2.3a
+@version v2.4a
 @author aca
 
 
@@ -54,12 +54,14 @@ function clc_playerInfoChanged($aseco, $changes){
 				$clc->showCustomLapCounter($aseco, true, $spectatorLogin, $clc->cpArray[$spectatedLogin]);
 			}
 			else{//is free-spec
-				$clc->specArray[$spectatorLogin] = null;
+				unset($clc->specArray[$spectatorLogin]);
+				$clc->showCustomLapCounter($aseco, false, $spectatorLogin);
+
 			}
 		}
 		//if status changed from spectator to player
-		elseif ($clc->specArray[$login] != null){
-			$clc->specArray[$login] = null;
+		elseif (isset($clc->specArray[$login])){
+			unset($clc->specArray[$login]);
 		}
 	}
 
