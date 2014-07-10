@@ -3,7 +3,7 @@
 plugin.c_lapscounter.php
 shows a custom lapscounter adjustable in size and position
 
-@version v2.1a
+@version v2.3a
 @author aca
 
 
@@ -69,19 +69,13 @@ function clc_playerInfoChanged($aseco, $changes){
 function clc_startup($aseco){
 	global $clc;
 	$clc = new ClapsCounter();
-	$clc->specArray = array();
-	$clc->cpArray = array();
-	
-	$clc->settings = simplexml_load_file('c_lapscounter.xml');
-	$clc->lap = 1;
-	$clc->gameMode = $clc->settings->gameMode;
 }
 
 
 function clc_playerConnect($aseco, $player){
 	global $clc;
 	if($aseco->server->gameinfo->mode == $clc->gameMode){
-		$clc->cpArray[$player->login] = -1;
+		$clc->cpArray[$player->login] = -2;
 		$clc->showCustomLapCounter($aseco, true, $player->login);
 	}
 }
@@ -89,8 +83,8 @@ function clc_playerConnect($aseco, $player){
 function clc_playerDisconnect($aseco, $player){
 	global $clc;
 	if($aseco->server->gameinfo->mode == $clc->gameMode){
-		$clc->cpArray[$player->login] = null;
-		$clc->specArray[$player->login] = null;
+		unset($clc->cpArray[$player->login]);
+		unset($clc->specArray[$player->login]);
 	}
 }
 
@@ -155,6 +149,15 @@ class ClapsCounter{
 	public $lap;
 	public $gameMode;	
 	
+	function ClapsCounter(){
+		$this->specArray = array();
+		$this->cpArray = array();
+		
+		$this->settings = simplexml_load_file('c_lapscounter.xml');
+		$this->lap = 1;
+		$this->gameMode = $this->settings->gameMode;
+	}
+	
 	function showCustomLapCounter($aseco, $show, $login=null, $cp=-2){
 		if($show){
 			$xml  = '<?xml version="1.0" encoding="UTF-8"?>';
@@ -169,7 +172,11 @@ class ClapsCounter{
 			
 			$cp++;
 
-		
+			//work-around for division by zero-bug
+			if($this->numCps == 0){
+				$this->numCps = -3;
+			}
+			
 			$this->lap = (int)($cp / $this->numCps);
 			$this->lap++;
 			
