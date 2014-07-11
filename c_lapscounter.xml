@@ -10,4 +10,5 @@
 		<scale>1.5</scale>
 	</widget_frame>
 	<gameMode>4</gameMode><!--gameMode 4 = Laps-->
+	<laps_of_matchsettings>false</laps_of_matchsettings><!-- set to true, if you want to take the number of laps indicated in the matchsettings, set to false if number of laps of map itself -->
 </settings>

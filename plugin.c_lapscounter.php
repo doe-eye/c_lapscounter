@@ -3,7 +3,7 @@
 plugin.c_lapscounter.php
 shows a custom lapscounter adjustable in size and position
 
-@version v2.4a
+@version v2.5
 @author aca
 
 
@@ -102,10 +102,14 @@ function clc_beginMap($aseco, $map){
 	if($aseco->server->gameinfo->mode == $clc->gameMode){
 		$clc->numCps = $map->nbchecks;
 		
-		 $aseco->client->query('GetNbLaps');
-		 $res = $aseco->client->getResponse();
-		 $clc->numLaps = $res['CurrentValue'];
-		//$clc->numLaps = $map->nblaps;
+		if($clc->laps_of_matchsettings){
+			$aseco->client->query('GetNbLaps');
+			$res = $aseco->client->getResponse();
+			$clc->numLaps = $res['CurrentValue'];
+		}
+		else{
+			$clc->numLaps = $map->nblaps;
+		}
 		if($clc->numLaps == 0){
 			$clc->numLaps =1;
 			
@@ -149,7 +153,8 @@ class ClapsCounter{
 	public $numCps;
 	public $numLaps;
 	public $lap;
-	public $gameMode;	
+	public $gameMode;
+	public $laps_of_matchsettings;
 	
 	function ClapsCounter(){
 		$this->specArray = array();
@@ -158,6 +163,7 @@ class ClapsCounter{
 		$this->settings = simplexml_load_file('c_lapscounter.xml');
 		$this->lap = 1;
 		$this->gameMode = $this->settings->gameMode;
+		$this->laps_of_matchsettings = $this->settings->laps_of_matchsettings;
 	}
 	
 	function showCustomLapCounter($aseco, $show, $login=null, $cp=-2){
